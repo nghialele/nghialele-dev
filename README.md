@@ -23,13 +23,32 @@ Build the site with `pnpm build`. Push to `master` and Cloudflare Pages will do 
 
 ### Connect Cloudflare Pages
 
-1. Create a **Pages** project in the Cloudflare dashboard using **Direct Upload**. Give it a project name; the workflow needs that exact name.
-2. In your GitHub repository, open **Settings → Secrets and variables → Actions** and add these repository secrets:
-   - `CLOUDFLARE_API_TOKEN` — an API token with **Account → Cloudflare Pages → Edit** permission.
-   - `CLOUDFLARE_ACCOUNT_ID` — your Cloudflare account ID.
-   - `CLOUDFLARE_PAGES_PROJECT_NAME` — the Pages project name from step 1.
-3. Push to `master` (or manually run **Deploy to Cloudflare Pages** from the Actions tab). Watch the workflow ship your site to the edge. Tiny site, big cloud energy.
+This workflow uses **Direct Upload**, not Cloudflare's Git integration. Cloudflare does **not** need to import or upload this GitHub repository. GitHub Actions builds the site and uploads only the generated `dist/` folder.
 
-Cloudflare's [Pages CI guide](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/) has screenshots and token details if the dashboard starts playing hide-and-seek.
+#### 1. Create an empty Pages project
+
+The clearest way is with Wrangler. Run this locally from the repository:
+
+```sh
+pnpm dlx wrangler pages project create nghialele-dev --production-branch master
+```
+
+Replace `nghialele-dev` with the Pages project name you want. This command creates the empty project; it does not upload your source code. If Wrangler asks you to log in, follow its browser prompt. The project will be available at `<project-name>.pages.dev` after the first deployment.
+
+You can also create the project in Cloudflare's dashboard: **Workers & Pages → Create application → Get started → Drag and drop your files**. The dashboard may ask for an initial upload; if it does, run `pnpm build` and upload the `dist/` folder—not the repository. The GitHub Action will replace that deployment on the next push.
+
+#### 2. Add GitHub secrets
+
+In your GitHub repository, open **Settings → Secrets and variables → Actions** and add these repository secrets:
+
+- `CLOUDFLARE_API_TOKEN` — an API token with **Account → Cloudflare Pages → Edit** permission.
+- `CLOUDFLARE_ACCOUNT_ID` — your Cloudflare account ID.
+- `CLOUDFLARE_PAGES_PROJECT_NAME` — the exact project name from step 1.
+
+#### 3. Deploy
+
+Push to `master` (or manually run **Deploy to Cloudflare Pages** from the Actions tab). GitHub Actions installs dependencies, runs `pnpm build`, and uploads `dist/` to your existing Cloudflare Pages project. Tiny site, big cloud energy.
+
+Cloudflare's [Direct Upload guide](https://developers.cloudflare.com/pages/get-started/direct-upload/) explains the project-creation options, and its [Pages CI guide](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/) covers GitHub secrets and the workflow.
 
 See the [license](LICENSE) and [code of conduct](CODE_OF_CONDUCT.md).
