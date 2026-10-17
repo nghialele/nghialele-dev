@@ -52,4 +52,6 @@ Once the Cloudflare project is connected and the build settings are saved, push 
 
 For details, see Cloudflare's [Git integration guide](https://developers.cloudflare.com/pages/get-started/git-integration/) and [Astro deployment guide](https://developers.cloudflare.com/pages/framework-guides/deploy-an-astro-site/).
 
+This site is based on [wqqz.dev](https://github.com/imwqqz/wqqz.dev). Thanks to [@imwqqz](https://github.com/imwqqz) for creating the original project.
+
 See the [license](LICENSE) and [code of conduct](CODE_OF_CONDUCT.md).
