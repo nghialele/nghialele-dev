@@ -3,6 +3,8 @@ const links = [
     { href: "/", label: "/home" },
     { href: "/archives", label: "+yap" },
     { href: "/tags", label: "#tags" },
+    { href: "/uses", label: "uses" },
+    { href: "/services", label: "services" },
     { href: "/resume", label: "about:resume" },
 ];
 const pathname = Astro.url.pathname;
@@ -18,8 +20,8 @@ function linkClass(href: string) {
 
 <nav class="sticky top-0 z-50">
     <div class="container mx-auto px-6">
-        <div class="flex h-16 items-center justify-center">
-            <div class="flex items-center gap-6">
+        <div class="flex min-h-16 items-center justify-center py-3">
+            <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
                 {links.map((l) => (
                     <a
                         href={l.href}
