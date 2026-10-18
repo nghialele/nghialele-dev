@@ -18,7 +18,8 @@ References:
 
 ## Service catalog configuration
 
-Edit `public/0user.json`. Add one object per service to `services`; do not publish a placeholder as a real service.
+Edit `src/data/services.json`. Keep hosted-service records separate from identity, contact, presence, and resume metadata in `public/0user.json`. Add one object per service; do not publish a placeholder as a real service.
+The `/uses` page reads its curated technology categories from `src/data/uses.json`. Keep this file limited to the tools and practices you want displayed publicly; resume skills in `public/0user.json` remain separate.
 
 ```json
 {
@@ -101,7 +102,7 @@ The Function should:
 8. Return `unknown` for missing monitors, malformed JSON, non-2xx responses, timeouts, or network errors. Do not return raw Kener data or error details.
 9. Use a bounded upstream timeout and a short cache, for example `Cache-Control: public, max-age=30`.
 
-The current browser adapter is designed for this sanitized contract, but the repository does not yet contain `functions/api/status.ts`; local testing of that route is the next implementation step.
+The browser adapter is designed for the sanitized contract, but the repository does not yet contain `functions/api/status.ts`; local testing of that route is the next implementation step. Service records live in `src/data/services.json`, and uses records live in `src/data/uses.json`.
 
 ## Cloudflare configuration
 

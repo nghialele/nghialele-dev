@@ -1,3 +1,5 @@
+import rawServices from "../data/services.json";
+import rawUses from "../data/uses.json";
 import rawSiteInfo from "../../public/0user.json";
 
 export interface ContactLink {
@@ -119,8 +121,6 @@ export interface SiteInfo {
     contacts: ContactLink[];
     presence?: PresenceConfig;
     status?: StatusConfig;
-    uses?: UseCategory[];
-    services?: ServiceEntry[];
     resume: ResumeData;
 }
 
@@ -128,7 +128,7 @@ export const info: SiteInfo = rawSiteInfo as SiteInfo;
 
 export const contacts = info.contacts;
 export const resume = info.resume;
-export const uses = info.uses ?? [];
-export const services = info.services ?? [];
+export const uses = rawUses as UseCategory[];
+export const services = rawServices as ServiceEntry[];
 
 export default info;
