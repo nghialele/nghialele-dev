@@ -35,6 +35,55 @@ export interface SkillCategory {
     items: string[];
 }
 
+export interface PresenceConfig {
+    userId: string;
+    endpoint?: string;
+}
+
+export interface UseItem {
+    name: string;
+    icon?: string;
+    description?: string;
+}
+
+export interface UseCategory {
+    category: string;
+    items: UseItem[];
+}
+
+export interface ServiceAccess {
+    available: boolean;
+    url?: string;
+    label?: string;
+    instructions?: string;
+    requestHref?: string;
+    external?: boolean;
+}
+
+export interface ServiceStatusConfig {
+    monitorId?: string;
+    label?: string;
+    badgeUrl?: string;
+    embedUrl?: string;
+}
+
+export interface ServiceEntry {
+    id: string;
+    name: string;
+    description: string;
+    published: boolean;
+    icon?: string;
+    publicAccess: ServiceAccess;
+    privateAccess: ServiceAccess;
+    status?: ServiceStatusConfig;
+}
+export type ServiceStatus = "operational" | "degraded" | "outage" | "unknown";
+
+export interface ServiceStatusResult {
+    status: ServiceStatus;
+    label: string;
+}
+
 export interface ResumeData {
     name: string;
     role: string;
@@ -59,11 +108,19 @@ export interface SiteMeta {
     ogImage?: string;
 }
 
+export interface StatusConfig {
+    endpoint?: string;
+}
+
 export interface SiteInfo {
     name: string;
     role: string;
     site: SiteMeta;
     contacts: ContactLink[];
+    presence?: PresenceConfig;
+    status?: StatusConfig;
+    uses?: UseCategory[];
+    services?: ServiceEntry[];
     resume: ResumeData;
 }
 
@@ -71,5 +128,7 @@ export const info: SiteInfo = rawSiteInfo as SiteInfo;
 
 export const contacts = info.contacts;
 export const resume = info.resume;
+export const uses = info.uses ?? [];
+export const services = info.services ?? [];
 
 export default info;

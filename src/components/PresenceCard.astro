@@ -1,0 +1,59 @@
+---
+import { CircleUserRound } from "@lucide/astro";
+import { info } from "../lib/info";
+
+const presence = info.presence;
+const endpoint = presence?.endpoint ?? "";
+const userId = presence?.userId ?? "";
+const configured = Boolean(endpoint && userId);
+---
+
+<aside
+    class="rounded-lg border border-border/70 bg-card p-5"
+    data-presence-card
+    data-endpoint={endpoint || undefined}
+    data-user-id={userId || undefined}
+    aria-labelledby="presence-title"
+>
+    <div class="flex items-start gap-3">
+        <CircleUserRound size={22} class="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
+        <div class="min-w-0">
+            <h2 id="presence-title" class="font-medium">Discord presence</h2>
+            <p class="mt-1 text-sm text-muted-foreground" data-presence-status>
+                {configured ? "Checking presence…" : "Presence unavailable until a public endpoint is configured."}
+            </p>
+            <p class="mt-1 text-sm text-muted-foreground" data-presence-activity hidden></p>
+        </div>
+    </div>
+</aside>
+
+{configured && (
+    <script>
+        import { fetchPresence } from "../lib/presence";
+
+        const card = document.querySelector("[data-presence-card]");
+        const status = card?.querySelector("[data-presence-status]");
+        const activity = card?.querySelector("[data-presence-activity]");
+        const endpoint = card?.getAttribute("data-endpoint") ?? "";
+        const userId = card?.getAttribute("data-user-id") ?? "";
+        const labels = {
+            online: "Online",
+            idle: "Idle",
+            dnd: "Do not disturb",
+            offline: "Offline",
+            unavailable: "Presence unavailable",
+        };
+
+        if (status) {
+            fetchPresence(endpoint, userId).then((result) => {
+                status.textContent = result.displayName
+                    ? `${result.displayName} · ${labels[result.state]}`
+                    : labels[result.state];
+                if (activity && result.activity) {
+                    activity.removeAttribute("hidden");
+                    activity.textContent = result.activity;
+                }
+            });
+        }
+    </script>
+)}

@@ -12,3 +12,10 @@
   - Acceptance: Both navigation links work and active-page indication is retained; links can wrap on narrow viewports.
   - Verify: `pnpm check` (0 errors) and `pnpm build` succeeded; inspected generated pages; mobile browser smoke check reported no console errors.
   - Files: `src/components/Navigation.astro`
+
+## Live uses and services follow-up
+- [x] Issue #3 uses redesign: local brand logos, responsive cloud tiles, and explicit Discord presence fallback.
+- [x] Issue #4 services redesign: catalog-driven service cards, public/private access sections, and Kener status fallback.
+- [x] Typed Kener and Lanyard adapters with fixture checks.
+- [x] `pnpm check`, `pnpm build`, and browser smoke verification completed.
+- [ ] Replace the empty services catalog with actual hosted services and confirmed access/status endpoint details.

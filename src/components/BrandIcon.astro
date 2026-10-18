@@ -1,0 +1,61 @@
+---
+import { Code } from "@lucide/astro";
+import {
+    siAnsible,
+    siAstro,
+    siDebian,
+    siDocker,
+    siExpress,
+    siGithubactions,
+    siGo,
+    siGooglecloud,
+    siJavascript,
+    siKubernetes,
+    siNodedotjs,
+    siPrisma,
+    siPython,
+    siReact,
+    siTailwindcss,
+    siTypescript,
+} from "simple-icons";
+
+interface Props {
+    icon?: string;
+    label: string;
+    class?: string;
+}
+
+const { icon, label, class: className } = Astro.props as Props;
+const icons = {
+    ansible: siAnsible,
+    astro: siAstro,
+    debian: siDebian,
+    docker: siDocker,
+    express: siExpress,
+    githubactions: siGithubactions,
+    go: siGo,
+    googlecloud: siGooglecloud,
+    javascript: siJavascript,
+    kubernetes: siKubernetes,
+    "node-dot-js": siNodedotjs,
+    prisma: siPrisma,
+    python: siPython,
+    react: siReact,
+    tailwindcss: siTailwindcss,
+    typescript: siTypescript,
+} as const;
+const brand = icon && icon in icons ? icons[icon as keyof typeof icons] : undefined;
+---
+
+{brand ? (
+    <svg
+        viewBox="0 0 24 24"
+        role="img"
+        aria-label={label}
+        class:list={["size-8", className]}
+    >
+        <path fill="currentColor" d={brand.path} />
+    </svg>
+) : (
+    <Code size={32} class={className} aria-label={label} role="img" />
+)}
