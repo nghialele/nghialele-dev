@@ -9,7 +9,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",
-    "preview:cf": "wrangler pages dev dist --env-file .env"
+    "preview:cf": "wrangler pages dev dist --env-file .env.local"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",

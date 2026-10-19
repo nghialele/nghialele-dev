@@ -3,5 +3,15 @@
         "id": "searxng",
         "icon": "searxng",
         "instructions": "Set it as your default search engine."
+    },
+    {
+        "id": "nghialele-dev",
+        "icon": "astro"
+    },
+    {
+        "id": "hycanvas",
+        "url": "https://canva.nghia.im",
+        "requestAccess": true,
+        "instructions": "Private instance. Ask me for access."
     }
 ]

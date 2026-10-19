@@ -1,18 +1,9 @@
 interface Env {
     KENER_API_TOKEN?: string;
     KENER_API_BASE_URL?: string;
-    KENER_PAGE_PATH?: string;
 }
 
 type KenerStatus = "operational" | "degraded" | "outage" | "unknown";
-
-interface KenerMonitor {
-    tag?: unknown;
-    name?: unknown;
-    description?: unknown;
-    status?: unknown;
-    external_url?: unknown;
-}
 
 interface PublicService {
     name?: string;
@@ -20,6 +11,8 @@ interface PublicService {
     url?: string;
     status: KenerStatus;
 }
+
+const DATA_WINDOW_SECONDS = 86400;
 
 function mapStatus(value: unknown): KenerStatus {
     if (value === "UP") return "operational";
@@ -39,6 +32,40 @@ function jsonResponse(body: unknown): Response {
     });
 }
 
+function latestStatus(data: unknown, fallback: unknown): KenerStatus {
+    if (Array.isArray(data) && data.length > 0) {
+        for (let index = data.length - 1; index >= 0; index -= 1) {
+            const point = data[index];
+            if (typeof point === "object" && point !== null && "status" in point) {
+                return mapStatus(point.status);
+            }
+        }
+    }
+    return mapStatus(fallback);
+}
+
+async function fetchMonitorStatus(
+    baseUrl: string,
+    tag: string,
+    fallback: unknown,
+    headers: HeadersInit,
+): Promise<KenerStatus> {
+    const now = Math.floor(Date.now() / 1000);
+    const url = `${baseUrl}/api/v4/monitors/${encodeURIComponent(tag)}/data?start_ts=${now - DATA_WINDOW_SECONDS}&end_ts=${now}`;
+
+    try {
+        const response = await fetch(url, { headers, signal: AbortSignal.timeout(5000) });
+        if (!response.ok) return mapStatus(fallback);
+        const payload: unknown = await response.json();
+        if (typeof payload !== "object" || payload === null || !("data" in payload)) {
+            return mapStatus(fallback);
+        }
+        return latestStatus(payload.data, fallback);
+    } catch {
+        return mapStatus(fallback);
+    }
+}
+
 export const onRequestGet = async ({
     request,
     env,
@@ -53,49 +80,57 @@ export const onRequestGet = async ({
         .filter(Boolean);
 
     const token = env.KENER_API_TOKEN;
-    const baseUrl = env.KENER_API_BASE_URL;
-    const pagePath = env.KENER_PAGE_PATH;
+    const baseUrl = env.KENER_API_BASE_URL?.replace(/\/$/, "");
 
-    if (!token || !baseUrl || !pagePath || ids.length === 0) {
+    if (!token || !baseUrl || ids.length === 0) {
         return jsonResponse({ services });
     }
 
+    const headers: HeadersInit = {
+        accept: "application/json",
+        authorization: `Bearer ${token}`,
+    };
+
     try {
-        const endpoint = `${baseUrl.replace(/\/$/, "")}/api/v4/pages/${encodeURIComponent(pagePath)}`;
-        const response = await fetch(endpoint, {
-            headers: {
-                accept: "application/json",
-                authorization: `Bearer ${token}`,
-            },
+        const response = await fetch(`${baseUrl}/api/v4/monitors`, {
+            headers,
             signal: AbortSignal.timeout(5000),
         });
         if (!response.ok) return jsonResponse({ services });
 
         const payload: unknown = await response.json();
-        if (typeof payload !== "object" || payload === null) return jsonResponse({ services });
-        if (!("page" in payload) || typeof payload.page !== "object" || payload.page === null) {
+        if (typeof payload !== "object" || payload === null || !("monitors" in payload)) {
             return jsonResponse({ services });
         }
-        if (!("monitors" in payload.page) || !Array.isArray(payload.page.monitors)) {
-            return jsonResponse({ services });
-        }
+        if (!Array.isArray(payload.monitors)) return jsonResponse({ services });
 
-        for (const monitor of payload.page.monitors as KenerMonitor[]) {
-            if (typeof monitor !== "object" || monitor === null) continue;
-            const tag = "tag" in monitor ? monitor.tag : undefined;
-            if (typeof tag !== "string" || !ids.includes(tag)) continue;
+        const matched = payload.monitors.filter((monitor: unknown) => {
+            if (typeof monitor !== "object" || monitor === null) return false;
+            if (!("tag" in monitor) || typeof monitor.tag !== "string") return false;
+            if (!ids.includes(monitor.tag)) return false;
+            return !("is_hidden" in monitor) || monitor.is_hidden !== "YES";
+        });
 
-            const service: PublicService = { status: mapStatus(monitor.status) };
-            const name = "name" in monitor ? monitor.name : undefined;
-            const description = "description" in monitor ? monitor.description : undefined;
-            const externalUrl = "external_url" in monitor ? monitor.external_url : undefined;
+        await Promise.all(
+            matched.map(async (monitor: Record<string, unknown>) => {
+                const tag = monitor.tag as string;
+                const service: PublicService = {
+                    status: await fetchMonitorStatus(baseUrl, tag, monitor.default_status, headers),
+                };
 
-            if (typeof name === "string" && name) service.name = name;
-            if (typeof description === "string" && description) service.description = description;
-            if (typeof externalUrl === "string" && externalUrl) service.url = externalUrl;
+                if (typeof monitor.name === "string" && monitor.name.trim()) {
+                    service.name = monitor.name.trim();
+                }
+                if (typeof monitor.description === "string" && monitor.description.trim()) {
+                    service.description = monitor.description.trim();
+                }
+                if (typeof monitor.external_url === "string" && monitor.external_url) {
+                    service.url = monitor.external_url;
+                }
 
-            services[tag] = service;
-        }
+                services[tag] = service;
+            }),
+        );
     } catch {
         return jsonResponse({ services });
     }

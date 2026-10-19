@@ -28,6 +28,7 @@ const requestHref = email?.href ?? "#";
                             class="rounded-lg border border-border/70 bg-card p-4"
                             data-service-card
                             data-service-id={service.id}
+                            data-service-url={service.url}
                         >
                             <div class="flex items-start gap-3">
                                 <BrandIcon
@@ -151,14 +152,15 @@ const requestHref = email?.href ?? "#";
                     status.removeAttribute("hidden");
                 }
 
-                if (service.url) {
+                const url = card.getAttribute("data-service-url") || service.url;
+                if (url) {
                     const link = card.querySelector<HTMLAnchorElement>("[data-service-link]");
                     if (link) {
-                        link.href = service.url;
+                        link.href = url;
                         try {
-                            link.firstChild!.textContent = new URL(service.url).host;
+                            link.firstChild!.textContent = new URL(url).host;
                         } catch {
-                            link.firstChild!.textContent = service.url;
+                            link.firstChild!.textContent = url;
                         }
                         link.removeAttribute("hidden");
                     }

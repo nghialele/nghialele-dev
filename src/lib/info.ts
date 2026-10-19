@@ -57,6 +57,7 @@ export interface ServiceEntry {
     id: string;
     icon?: string;
     name?: string;
+    url?: string;
     instructions?: string;
     requestAccess?: boolean;
 }
