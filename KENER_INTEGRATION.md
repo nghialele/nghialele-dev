@@ -18,8 +18,11 @@ References:
 
 ## Service catalog configuration
 
-Edit `src/data/services.json`. Keep hosted-service records separate from identity, contact, presence, and resume metadata in `public/0user.json`. Add one object per service; do not publish a placeholder as a real service.
+Edit `src/data/services.json`. Keep hosted-service records separate from identity, contact, presence, and resume metadata in `public/0user.json`. The committed file contains the published `searxng` entry; add every additional service as its own object.
+
 The `/uses` page reads its curated technology categories from `src/data/uses.json`. Keep this file limited to the tools and practices you want displayed publicly; resume skills in `public/0user.json` remain separate.
+
+Replace every example value in the service template before publishing it. Set `published` to `true` only when the service name, description, access instructions, URLs, and status identifiers are accurate.
 
 ```json
 {
@@ -49,7 +52,18 @@ The `/uses` page reads its curated technology categories from `src/data/uses.jso
 }
 ```
 
-`monitorId` must match the Kener monitor **tag**, not its display name or database ID. The badge and embed URLs should be copied from Kener’s sharing UI after verifying the monitor’s public sharing settings. The site renders these as links; it does not inject arbitrary HTML or third-party scripts.
+Field notes:
+
+- `id` is the stable catalog identifier.
+- `published` controls whether the service appears on `/services`; unpublished records are ignored.
+- `icon` is optional. If present, use a key supported by `src/components/BrandIcon.astro`; omit it to use the generic Lucide fallback.
+- `publicAccess.available` controls whether public access exists; a clickable link additionally requires a non-empty `url`. With `available: true` and no `url`, the label renders as plain text rather than a link.
+- `privateAccess` content renders only when `available: true`. `requestHref` can be an email link or another request form URL.
+- `status.monitorId` must match the Kener monitor **tag**, not its display name or database ID.
+- `status.badgeUrl` and `status.embedUrl` are optional links copied from Kener's sharing UI after public sharing is enabled.
+- The status badge renders only when `status.monitorId` is a non-empty string; services without a configured monitor show no status label.
+
+The site renders these links; it does not inject arbitrary HTML or third-party scripts.
 
 ## Cloudflare Pages Function
 

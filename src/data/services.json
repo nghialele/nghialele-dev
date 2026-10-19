@@ -1,1 +1,23 @@
-[]
+[
+    {
+        "id": "searxng",
+        "name": "SearXNG",
+        "description": "SearXNG is a metasearch engine, aggregating the results of other search engines while not storing information about its users.",
+        "published": true,
+        "icon": "searxng",
+        "publicAccess": {
+            "available": true,
+            "url": "https://searx.githo.st",
+            "label": "searx.githo.st",
+            "instructions": "Set it as your default search engine.",
+            "external": true
+        },
+        "privateAccess": {
+            "available": false
+        },
+        "status": {
+            "monitorId": "",
+            "label": "Status unavailable"
+        }
+    }
+]
