@@ -18,7 +18,8 @@ tasks/
 
 # environment variables
 .env
-.env.production
+.env.*
+!.env.example
 
 # macOS-specific files
 .DS_Store
@@ -27,5 +28,5 @@ tasks/
 .idea/
 .junie/
 
-# local Cloudflare function variables
-.dev.vars
+# wrangler local state
+.wrangler/

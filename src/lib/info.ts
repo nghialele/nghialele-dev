@@ -53,30 +53,12 @@ export interface UseCategory {
     items: UseItem[];
 }
 
-export interface ServiceAccess {
-    available: boolean;
-    url?: string;
-    label?: string;
-    instructions?: string;
-    requestHref?: string;
-    external?: boolean;
-}
-
-export interface ServiceStatusConfig {
-    label?: string;
-    badgeUrl?: string;
-    embedUrl?: string;
-}
-
 export interface ServiceEntry {
     id: string;
-    name: string;
-    description: string;
-    published: boolean;
     icon?: string;
-    publicAccess: ServiceAccess;
-    privateAccess: ServiceAccess;
-    status?: ServiceStatusConfig;
+    name?: string;
+    instructions?: string;
+    requestAccess?: boolean;
 }
 
 export interface ResumeData {
@@ -103,17 +85,12 @@ export interface SiteMeta {
     ogImage?: string;
 }
 
-export interface StatusConfig {
-    endpoint?: string;
-}
-
 export interface SiteInfo {
     name: string;
     role: string;
     site: SiteMeta;
     contacts: ContactLink[];
     presence?: PresenceConfig;
-    status?: StatusConfig;
     resume: ResumeData;
 }
 
