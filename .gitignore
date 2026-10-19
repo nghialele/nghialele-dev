@@ -26,3 +26,6 @@ tasks/
 # jetbrains setting folder
 .idea/
 .junie/
+
+# local Cloudflare function variables
+.dev.vars

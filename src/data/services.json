@@ -14,10 +14,6 @@
         },
         "privateAccess": {
             "available": false
-        },
-        "status": {
-            "monitorId": "",
-            "label": "Status unavailable"
         }
     }
 ]

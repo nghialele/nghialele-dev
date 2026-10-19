@@ -63,7 +63,6 @@ export interface ServiceAccess {
 }
 
 export interface ServiceStatusConfig {
-    monitorId?: string;
     label?: string;
     badgeUrl?: string;
     embedUrl?: string;
@@ -78,12 +77,6 @@ export interface ServiceEntry {
     publicAccess: ServiceAccess;
     privateAccess: ServiceAccess;
     status?: ServiceStatusConfig;
-}
-export type ServiceStatus = "operational" | "degraded" | "outage" | "unknown";
-
-export interface ServiceStatusResult {
-    status: ServiceStatus;
-    label: string;
 }
 
 export interface ResumeData {
