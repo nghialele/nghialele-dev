@@ -97,7 +97,7 @@ To hide a service, detach the monitor from the Kener page (or mark it hidden in 
 `ACTIVE` and `INACTIVE` are monitor enablement flags, **not** health states; the function never maps them. Listing `status=ACTIVE` on a monitor does not mean the service is up.
 
 9. Fails soft: missing configuration, a non-2xx page or monitor response, invalid JSON, a timeout, or a network error all return `200` with `{"services":{},"pageResolved":false}`. The page then keeps the catalog cards it rendered at build time, with no description, status, or link. An empty page returns `{"services":{},"pageResolved":true}` and the client removes the build-time cards.
-10. Sends `cache-control: public, max-age=30` and `x-content-type-options: nosniff`.
+10. Sends `cache-control: public, max-age=30`, `x-cache`, and `x-content-type-options: nosniff`.
 
 `public/_routes.json` limits Functions to `/api/*`:
 
@@ -108,6 +108,33 @@ To hide a service, detach the monitor from the Kener page (or mark it hidden in 
     "exclude": []
 }
 ```
+
+## Caching
+
+Every visitor would otherwise cost `2 + N` Kener requests (page, monitor list, and one data call per monitor). Cloudflare does **not** cache Pages Function responses automatically, so the Function caches its own snapshot with the [Cache API](https://developers.cloudflare.com/workers/runtime-apis/cache/) (`caches.default`).
+
+| Constant | Value | Meaning |
+| --- | --- | --- |
+| `CACHE_TTL_SECONDS` | `300` | Snapshot younger than 5 minutes is served without calling Kener |
+| `CACHE_RETENTION_SECONDS` | `604800` | Snapshot stays in cache up to 7 days as a stale fallback |
+| `CLIENT_MAX_AGE_SECONDS` | `30` | Browser-level `cache-control` on the response |
+| `REQUEST_TIMEOUT_MS` (client) | `20000` | Client wait budget, above the Function's 15s worst case |
+
+The `x-cache` response header reports what happened:
+
+| `x-cache` | Meaning | Kener calls |
+| --- | --- | --- |
+| `MISS` | Snapshot absent or older than 5 minutes; refreshed and stored | yes |
+| `HIT` | Snapshot younger than 5 minutes | none |
+| `STALE` | Snapshot expired and the refresh failed; last good data served | yes, failed |
+| `BYPASS` | No snapshot and no usable configuration; unresolved response | none, or failed |
+
+Stale-while-error, not stale-while-revalidate: an expired snapshot is only served after a failed refresh. While Kener is reachable, a badge is at most 5 minutes old.
+
+Two limits worth knowing:
+
+- The Cache API is **per-datacenter**, not global. Each Cloudflare colo warms its own entry, so a visitor in a cold region still pays one Kener round trip. A globally shared cache would need KV.
+- A stale refresh is synchronous and can take up to 15 seconds when Kener is unreachable (three sequential 5-second timeouts). That is why the client timeout is 20 seconds: a shorter one would discard the stale snapshot mid-flight and leave cards with no status.
 
 ## Environment variables
 
@@ -146,11 +173,27 @@ curl -s "http://127.0.0.1:8788/api/services"
 
 Expected:
 
-- `200` with `{"services":{...},"pageResolved":true}` and a `cache-control` header when Kener responds.
-- `200` with `{"services":{},"pageResolved":false}` when Kener is unreachable or misconfigured.
+- `200` with `{"services":{...},"pageResolved":true}` and `x-cache: MISS` on the first call, `x-cache: HIT` on calls within 5 minutes.
+- `200` with `{"services":{},"pageResolved":false}` and `x-cache: BYPASS` when Kener is unreachable and nothing is cached.
+- `200` with the previous snapshot and `x-cache: STALE` when Kener is unreachable but a snapshot older than 5 minutes exists.
 - The token in neither the body nor the headers.
 
-`wrangler pages dev` also loads `.env.local` on top of `--env-file`, so a second env file cannot blank out a variable that `.env.local` defines. To exercise the failure path, point `KENER_PAGE_PATH` at a page that does not exist, e.g. `--binding KENER_PAGE_PATH=missing-page`.
+To watch a refresh, clear local cache state and call twice:
+
+```sh
+rm -rf .wrangler/state
+curl -s -D - -o /dev/null http://127.0.0.1:8788/api/services | grep -i x-cache   # MISS
+curl -s -D - -o /dev/null http://127.0.0.1:8788/api/services | grep -i x-cache   # HIT
+```
+
+To exercise the stale path, point the Function at a dead Kener origin, wait for the 5-minute TTL to pass, and call again:
+
+```sh
+pnpm build
+wrangler pages dev dist --env-file .env.local --binding KENER_API_BASE_URL=http://127.0.0.1:9
+```
+
+`wrangler pages dev` also loads `.env.local` on top of `--env-file`, so a second env file cannot blank out a variable that `.env.local` defines. To exercise the unresolved path, point `KENER_PAGE_PATH` at a page that does not exist, e.g. `--binding KENER_PAGE_PATH=missing-page`.
 
 ## Deployment checklist
 
@@ -160,6 +203,7 @@ Expected:
 - [ ] `KENER_API_TOKEN` is set as an encrypted Pages secret.
 - [ ] `KENER_API_BASE_URL` and `KENER_PAGE_PATH` are set as Pages variables.
 - [ ] `pnpm preview:cf` returns only monitors attached to the page.
+- [ ] Two calls within 5 minutes return `x-cache: HIT` on the second.
 - [ ] A preview deployment shows Kener names, descriptions, statuses, and URLs.
 - [ ] No token or raw Kener response is visible in DevTools.
 

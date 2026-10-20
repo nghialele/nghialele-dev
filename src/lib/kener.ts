@@ -29,6 +29,11 @@ const statuses: Record<string, KenerStatus> = {
 
 const EMPTY: KenerServicesResult = { services: {}, pageResolved: false };
 
+// The Function refreshes a stale snapshot synchronously: page (5s) + monitors (5s)
+// + statuses (5s) can take 15s when Kener is unreachable. Waiting less than that
+// throws away the stale snapshot the Function was about to return.
+const REQUEST_TIMEOUT_MS = 20000;
+
 function toService(value: unknown): KenerService | undefined {
     if (typeof value !== "object" || value === null) return undefined;
 
@@ -56,7 +61,7 @@ export async function fetchKenerServices(
     try {
         const response = await fetcher(endpoint, {
             headers: { accept: "application/json" },
-            signal: AbortSignal.timeout(5000),
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
         if (!response.ok) return EMPTY;
 
