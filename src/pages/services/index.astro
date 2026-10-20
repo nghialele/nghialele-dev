@@ -1,58 +1,264 @@
 ---
-import { Server, Network, Wrench } from "@lucide/astro";
+import { Code, ExternalLink, Mail, Server } from "@lucide/astro";
 import Base from "../../layouts/Base.astro";
-import { info } from "../../lib/info";
+import BrandIcon from "../../components/BrandIcon.astro";
+import { info, services } from "../../lib/info";
 
-const services = [
-    {
-        name: "Tools & software",
-        description: "A few useful tools and software that I host myself.",
-        icon: Server,
-    },
-    {
-        name: "Relays & proxies",
-        description: "Self-hosted relays and proxies for sharing with others.",
-        icon: Network,
-    },
-    {
-        name: "IT help",
-        description: "Common IT services and support.",
-        icon: Wrench,
-    },
-];
+const email = info.contacts.find((contact) => contact.label === "email");
+const requestHref = email?.href ?? "#";
 ---
 
 <Base
     title={`Services - ${info.site.name}`}
-    description={`Public services and IT support from ${info.name}.`}
+    description={`Public services and access information from ${info.name}.`}
 >
     <section class="container mx-auto px-6 pt-16 pb-20">
         <div class="max-w-3xl mx-auto">
             <header class="mb-10">
                 <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">services</h1>
                 <p class="mt-3 text-base leading-relaxed text-muted-foreground">
-                    I host some services myself and you are welcome to use. Ask me for details or availability.
+                    Services I host and make available. Public links are ready to use; private services can be requested.
                 </p>
             </header>
 
-            <ul class="divide-y divide-border/40 border-t border-border/40">
+            <ul class="grid gap-3 sm:grid-cols-2" data-service-list>
                 {services.map((service) => (
-                    <li class="flex gap-4 py-5">
-                        <service.icon size={20} class="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-                        <div>
-                            <h2 class="font-medium text-foreground">{service.name}</h2>
-                            <p class="mt-1 text-sm leading-relaxed text-muted-foreground">{service.description}</p>
+                    <li
+                        class="rounded-lg border border-border/70 bg-card p-4"
+                        data-service-card
+                        data-service-id={service.id}
+                        data-service-url={service.url}
+                    >
+                        <div class="flex items-start gap-3">
+                            <BrandIcon
+                                icon={service.icon}
+                                label={`${service.name ?? service.id} logo`}
+                                class="size-8 shrink-0 text-accent"
+                            />
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                                    <h2 class="text-sm font-medium text-foreground" data-service-name>
+                                        {service.name ?? service.id}
+                                    </h2>
+                                    <span
+                                        class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+                                        data-service-status
+                                        hidden
+                                    >
+                                        <span
+                                            class="size-1.5 rounded-full bg-muted-foreground/50"
+                                            data-service-status-dot
+                                            aria-hidden="true"
+                                        ></span>
+                                        <span data-service-status-label></span>
+                                    </span>
+                                </div>
+
+                                <p
+                                    class="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2"
+                                    data-service-description
+                                    hidden
+                                ></p>
+
+                                <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+                                    <a
+                                        data-service-link
+                                        hidden
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="inline-flex items-center gap-1 font-medium text-foreground underline underline-offset-2 decoration-accent/50 hover:text-accent"
+                                    >
+                                        Visit service
+                                        <ExternalLink size={12} aria-hidden="true" />
+                                    </a>
+
+                                    {service.instructions && (
+                                        <span class="text-muted-foreground">{service.instructions}</span>
+                                    )}
+
+                                    {service.requestAccess && (
+                                        <a
+                                            href={requestHref}
+                                            class="inline-flex items-center gap-1 font-medium text-foreground underline underline-offset-2 decoration-accent/50 hover:text-accent"
+                                        >
+                                            <Mail size={12} aria-hidden="true" />
+                                            Request access
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </li>
                 ))}
             </ul>
 
-            <p class="mt-8 text-sm text-muted-foreground">
-                Interested? <a
-                    href={`mailto:${info.contacts.find((contact) => contact.label === "email")?.text}`}
-                    class="text-foreground underline underline-offset-2 decoration-accent/50 hover:text-accent transition-colors"
-                >Get in touch.</a>
-            </p>
+            <div
+                class="rounded-lg border border-dashed border-border p-8 text-center"
+                role="status"
+                data-service-empty
+                hidden={services.length > 0}
+            >
+                <Server size={28} class="mx-auto text-muted-foreground" aria-hidden="true" />
+                <h2 class="mt-3 font-medium">Service listings are being prepared</h2>
+                <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    Check back soon, or contact me if you are interested in using a hosted service.
+                </p>
+                <a
+                    href={requestHref}
+                    class="mt-4 inline-flex text-sm font-medium text-foreground underline underline-offset-2 decoration-accent/50 hover:text-accent"
+                >
+                    Get in touch
+                </a>
+            </div>
+
+            <template data-service-template>
+                <li class="rounded-lg border border-border/70 bg-card p-4" data-service-card>
+                    <div class="flex items-start gap-3">
+                        <Code
+                            size={32}
+                            class="size-8 shrink-0 text-accent"
+                            data-service-icon
+                            role="img"
+                            aria-label=""
+                        />
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                                <h2 class="text-sm font-medium text-foreground" data-service-name></h2>
+                                <span
+                                    class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+                                    data-service-status
+                                    hidden
+                                >
+                                    <span
+                                        class="size-1.5 rounded-full bg-muted-foreground/50"
+                                        data-service-status-dot
+                                        aria-hidden="true"
+                                    ></span>
+                                    <span data-service-status-label></span>
+                                </span>
+                            </div>
+
+                            <p
+                                class="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2"
+                                data-service-description
+                                hidden
+                            ></p>
+
+                            <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+                                <a
+                                    data-service-link
+                                    hidden
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex items-center gap-1 font-medium text-foreground underline underline-offset-2 decoration-accent/50 hover:text-accent"
+                                >
+                                    Visit service
+                                    <ExternalLink size={12} aria-hidden="true" />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </template>
         </div>
     </section>
 </Base>
+
+<script>
+    import { fetchKenerServices, kenerStatusLabels } from "../../lib/kener";
+
+    const dotClasses: Record<string, string> = {
+        operational: "bg-success",
+        degraded: "bg-warning",
+        outage: "bg-caution",
+        unknown: "bg-muted-foreground/50",
+    };
+
+    const list = document.querySelector<HTMLElement>("[data-service-list]");
+    const empty = document.querySelector<HTMLElement>("[data-service-empty]");
+    const template = document.querySelector<HTMLTemplateElement>("[data-service-template]");
+
+    if (list && template) {
+        const jsonOrder = Array.from(list.querySelectorAll<HTMLElement>("[data-service-card]"))
+            .map((card) => card.dataset.serviceId ?? "")
+            .filter(Boolean);
+
+        fetchKenerServices("/api/services").then(({ services, pageResolved }) => {
+            if (!pageResolved) return;
+
+            const byId = new Map<string, HTMLElement>();
+            for (const card of Array.from(list.querySelectorAll<HTMLElement>("[data-service-card]"))) {
+                const id = card.dataset.serviceId ?? "";
+                if (services[id]) {
+                    byId.set(id, card);
+                } else {
+                    card.remove();
+                }
+            }
+
+            const ordered = jsonOrder.filter((id) => services[id]);
+            const extras = Object.entries(services)
+                .filter(([id]) => !jsonOrder.includes(id))
+                .sort((a, b) => a[1].position - b[1].position);
+
+            for (const [id, service] of extras) {
+                const fragment = template.content.cloneNode(true) as DocumentFragment;
+                const card = fragment.querySelector<HTMLElement>("[data-service-card]");
+                if (!card) continue;
+
+                card.dataset.serviceId = id;
+                const icon = card.querySelector("[data-service-icon]");
+                if (icon) icon.setAttribute("aria-label", `${service.name ?? id} logo`);
+
+                list.append(fragment);
+                byId.set(id, card);
+            }
+
+            for (const id of [...ordered, ...extras.map(([id]) => id)]) {
+                const card = byId.get(id);
+                if (card) list.append(card);
+            }
+
+            for (const [id, service] of Object.entries(services)) {
+                const card = byId.get(id);
+                if (!card) continue;
+
+                const name = card.querySelector("[data-service-name]");
+                if (name && service.name) name.textContent = service.name;
+
+                const description = card.querySelector<HTMLElement>("[data-service-description]");
+                if (description && service.description) {
+                    description.textContent = service.description;
+                    description.removeAttribute("hidden");
+                }
+
+                const status = card.querySelector<HTMLElement>("[data-service-status]");
+                const statusLabel = card.querySelector("[data-service-status-label]");
+                const statusDot = card.querySelector<HTMLElement>("[data-service-status-dot]");
+                if (status && statusLabel && statusDot) {
+                    statusLabel.textContent = kenerStatusLabels[service.status];
+                    statusDot.className = `size-1.5 rounded-full ${dotClasses[service.status]}`;
+                    status.removeAttribute("hidden");
+                }
+
+                const url = card.getAttribute("data-service-url") || service.url;
+                if (url) {
+                    const link = card.querySelector<HTMLAnchorElement>("[data-service-link]");
+                    if (link) {
+                        link.href = url;
+                        try {
+                            link.firstChild!.textContent = new URL(url).host;
+                        } catch {
+                            link.firstChild!.textContent = url;
+                        }
+                        link.removeAttribute("hidden");
+                    }
+                }
+            }
+
+            if (empty) {
+                empty.hidden = list.querySelectorAll("[data-service-card]").length > 0;
+            }
+        });
+    }
+</script>

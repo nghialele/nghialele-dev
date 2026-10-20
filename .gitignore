@@ -12,10 +12,14 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# local planning notes
+tasks/
+
 
 # environment variables
 .env
-.env.production
+.env.*
+!.env.example
 
 # macOS-specific files
 .DS_Store
@@ -23,3 +27,6 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 .junie/
+
+# wrangler local state
+.wrangler/

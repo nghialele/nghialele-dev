@@ -1,3 +1,5 @@
+import rawServices from "../data/services.json";
+import rawUses from "../data/uses.json";
 import rawSiteInfo from "../../public/0user.json";
 
 export interface ContactLink {
@@ -35,6 +37,31 @@ export interface SkillCategory {
     items: string[];
 }
 
+export interface PresenceConfig {
+    userId: string;
+    endpoint?: string;
+}
+
+export interface UseItem {
+    name: string;
+    icon?: string;
+    description?: string;
+}
+
+export interface UseCategory {
+    category: string;
+    items: UseItem[];
+}
+
+export interface ServiceEntry {
+    id: string;
+    icon?: string;
+    name?: string;
+    url?: string;
+    instructions?: string;
+    requestAccess?: boolean;
+}
+
 export interface ResumeData {
     name: string;
     role: string;
@@ -64,6 +91,7 @@ export interface SiteInfo {
     role: string;
     site: SiteMeta;
     contacts: ContactLink[];
+    presence?: PresenceConfig;
     resume: ResumeData;
 }
 
@@ -71,5 +99,7 @@ export const info: SiteInfo = rawSiteInfo as SiteInfo;
 
 export const contacts = info.contacts;
 export const resume = info.resume;
+export const uses = rawUses as UseCategory[];
+export const services = rawServices as ServiceEntry[];
 
 export default info;

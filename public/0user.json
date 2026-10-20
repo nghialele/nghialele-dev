@@ -34,6 +34,13 @@
             "rel": "noopener noreferrer"
         }
     ],
+    "presence": {
+        "userId": "",
+        "endpoint": ""
+    },
+    "status": {
+        "endpoint": ""
+    },
     "resume": {
         "name": "nghialele",
         "role": "system-administrator",
@@ -68,46 +75,19 @@
         "skills": [
             {
                 "category": "Languages",
-                "items": [
-                    "TypeScript",
-                    "JavaScript",
-                    "Python",
-                    "Go",
-                    "SQL",
-                    "Bash"
-                ]
+                "items": ["TypeScript", "JavaScript", "Python", "Go", "SQL", "Bash"]
             },
             {
                 "category": "Frameworks & Libraries",
-                "items": [
-                    "React",
-                    "Node.js",
-                    "Express",
-                    "Astro",
-                    "Prisma",
-                    "Tailwind CSS"
-                ]
+                "items": ["React", "Node.js", "Express", "Astro", "Prisma", "Tailwind CSS"]
             },
             {
                 "category": "Infrastructure",
-                "items": [
-                    "Docker",
-                    "Kubernetes",
-                    "Debian",
-                    "GCP",
-                    "Ansible",
-                    "CI/CD"
-                ]
+                "items": ["Docker", "Kubernetes", "Debian", "GCP", "Ansible", "CI/CD"]
             },
             {
                 "category": "Practices",
-                "items": [
-                    "Testing",
-                    "Code Review",
-                    "Agile",
-                    "Observability",
-                    "Security Awareness"
-                ]
+                "items": ["Testing", "Code Review", "Agile", "Observability", "Security Awareness"]
             }
         ],
         "education": [

@@ -1,0 +1,45 @@
+[
+    {
+        "category": "Languages",
+        "items": [
+            { "name": "TypeScript", "icon": "typescript" },
+            { "name": "JavaScript", "icon": "javascript" },
+            { "name": "Python", "icon": "python" },
+            { "name": "Go", "icon": "go" },
+            { "name": "SQL" },
+            { "name": "Bash" }
+        ]
+    },
+    {
+        "category": "Frameworks & Libraries",
+        "items": [
+            { "name": "React", "icon": "react" },
+            { "name": "Node.js", "icon": "node-dot-js" },
+            { "name": "Express", "icon": "express" },
+            { "name": "Astro", "icon": "astro" },
+            { "name": "Prisma", "icon": "prisma" },
+            { "name": "Tailwind CSS", "icon": "tailwindcss" }
+        ]
+    },
+    {
+        "category": "Infrastructure",
+        "items": [
+            { "name": "Docker", "icon": "docker" },
+            { "name": "Kubernetes", "icon": "kubernetes" },
+            { "name": "Debian", "icon": "debian" },
+            { "name": "Google Cloud", "icon": "googlecloud" },
+            { "name": "Ansible", "icon": "ansible" },
+            { "name": "GitHub Actions", "icon": "githubactions" }
+        ]
+    },
+    {
+        "category": "Practices",
+        "items": [
+            { "name": "Testing" },
+            { "name": "Code Review" },
+            { "name": "Agile" },
+            { "name": "Observability" },
+            { "name": "Security Awareness" }
+        ]
+    }
+]
