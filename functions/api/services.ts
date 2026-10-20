@@ -1,6 +1,7 @@
 interface Env {
     KENER_API_TOKEN?: string;
     KENER_API_BASE_URL?: string;
+    KENER_PAGE_PATH?: string;
 }
 
 type KenerStatus = "operational" | "degraded" | "outage" | "unknown";
@@ -10,6 +11,12 @@ interface PublicService {
     description?: string;
     url?: string;
     status: KenerStatus;
+    position: number;
+}
+
+interface PageMember {
+    tag: string;
+    position: number;
 }
 
 const DATA_WINDOW_SECONDS = 86400;
@@ -66,24 +73,52 @@ async function fetchMonitorStatus(
     }
 }
 
-export const onRequestGet = async ({
-    request,
-    env,
-}: {
-    request: Request;
-    env: Env;
-}): Promise<Response> => {
-    const services: Record<string, PublicService> = {};
-    const ids = (new URL(request.url).searchParams.get("ids") ?? "")
-        .split(",")
-        .map((id) => id.trim())
-        .filter(Boolean);
+async function fetchPageMembers(
+    baseUrl: string,
+    pagePath: string,
+    headers: HeadersInit,
+): Promise<PageMember[] | null> {
+    try {
+        const response = await fetch(`${baseUrl}/api/v4/pages/${encodeURIComponent(pagePath)}`, {
+            headers,
+            signal: AbortSignal.timeout(5000),
+        });
+        if (!response.ok) return null;
 
+        const payload: unknown = await response.json();
+        if (typeof payload !== "object" || payload === null || !("page" in payload)) return null;
+
+        const page = payload.page;
+        if (typeof page !== "object" || page === null || !("monitors" in page)) return null;
+        if (!Array.isArray(page.monitors)) return null;
+
+        const members: PageMember[] = [];
+        for (const monitor of page.monitors) {
+            if (typeof monitor !== "object" || monitor === null) continue;
+            if (!("monitor_tag" in monitor) || typeof monitor.monitor_tag !== "string") continue;
+
+            const tag = monitor.monitor_tag.trim();
+            if (!tag) continue;
+
+            const position =
+                "position" in monitor && typeof monitor.position === "number" ? monitor.position : 0;
+            members.push({ tag, position });
+        }
+
+        members.sort((a, b) => a.position - b.position);
+        return members;
+    } catch {
+        return null;
+    }
+}
+
+export const onRequestGet = async ({ env }: { request: Request; env: Env }): Promise<Response> => {
     const token = env.KENER_API_TOKEN;
     const baseUrl = env.KENER_API_BASE_URL?.replace(/\/$/, "");
+    const pagePath = env.KENER_PAGE_PATH?.trim();
 
-    if (!token || !baseUrl || ids.length === 0) {
-        return jsonResponse({ services });
+    if (!token || !baseUrl || !pagePath) {
+        return jsonResponse({ services: {}, pageResolved: false });
     }
 
     const headers: HeadersInit = {
@@ -91,31 +126,46 @@ export const onRequestGet = async ({
         authorization: `Bearer ${token}`,
     };
 
+    const members = await fetchPageMembers(baseUrl, pagePath, headers);
+    if (!members) return jsonResponse({ services: {}, pageResolved: false });
+    if (members.length === 0) return jsonResponse({ services: {}, pageResolved: true });
+
     try {
         const response = await fetch(`${baseUrl}/api/v4/monitors`, {
             headers,
             signal: AbortSignal.timeout(5000),
         });
-        if (!response.ok) return jsonResponse({ services });
+        if (!response.ok) return jsonResponse({ services: {}, pageResolved: false });
 
         const payload: unknown = await response.json();
         if (typeof payload !== "object" || payload === null || !("monitors" in payload)) {
-            return jsonResponse({ services });
+            return jsonResponse({ services: {}, pageResolved: false });
         }
-        if (!Array.isArray(payload.monitors)) return jsonResponse({ services });
+        if (!Array.isArray(payload.monitors)) {
+            return jsonResponse({ services: {}, pageResolved: false });
+        }
 
-        const matched = payload.monitors.filter((monitor: unknown) => {
-            if (typeof monitor !== "object" || monitor === null) return false;
-            if (!("tag" in monitor) || typeof monitor.tag !== "string") return false;
-            if (!ids.includes(monitor.tag)) return false;
-            return !("is_hidden" in monitor) || monitor.is_hidden !== "YES";
-        });
+        const byTag = new Map<string, Record<string, unknown>>();
+        for (const monitor of payload.monitors) {
+            if (typeof monitor !== "object" || monitor === null) continue;
+            if (!("tag" in monitor) || typeof monitor.tag !== "string") continue;
+            byTag.set(monitor.tag, monitor as Record<string, unknown>);
+        }
 
-        await Promise.all(
-            matched.map(async (monitor: Record<string, unknown>) => {
-                const tag = monitor.tag as string;
+        const entries = await Promise.all(
+            members.map(async (member): Promise<[string, PublicService] | null> => {
+                const monitor = byTag.get(member.tag);
+                if (!monitor) return null;
+                if (monitor.is_hidden === "YES") return null;
+
                 const service: PublicService = {
-                    status: await fetchMonitorStatus(baseUrl, tag, monitor.default_status, headers),
+                    status: await fetchMonitorStatus(
+                        baseUrl,
+                        member.tag,
+                        monitor.default_status,
+                        headers,
+                    ),
+                    position: member.position,
                 };
 
                 if (typeof monitor.name === "string" && monitor.name.trim()) {
@@ -128,12 +178,17 @@ export const onRequestGet = async ({
                     service.url = monitor.external_url;
                 }
 
-                services[tag] = service;
+                return [member.tag, service];
             }),
         );
-    } catch {
-        return jsonResponse({ services });
-    }
 
-    return jsonResponse({ services });
+        const services: Record<string, PublicService> = {};
+        for (const entry of entries) {
+            if (entry) services[entry[0]] = entry[1];
+        }
+
+        return jsonResponse({ services, pageResolved: true });
+    } catch {
+        return jsonResponse({ services: {}, pageResolved: false });
+    }
 };

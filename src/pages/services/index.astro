@@ -1,5 +1,5 @@
 ---
-import { ExternalLink, Mail, Server } from "@lucide/astro";
+import { Code, ExternalLink, Mail, Server } from "@lucide/astro";
 import Base from "../../layouts/Base.astro";
 import BrandIcon from "../../components/BrandIcon.astro";
 import { info, services } from "../../lib/info";
@@ -21,92 +21,145 @@ const requestHref = email?.href ?? "#";
                 </p>
             </header>
 
-            {services.length > 0 ? (
-                <ul class="grid gap-3 sm:grid-cols-2" data-service-list>
-                    {services.map((service) => (
-                        <li
-                            class="rounded-lg border border-border/70 bg-card p-4"
-                            data-service-card
-                            data-service-id={service.id}
-                            data-service-url={service.url}
-                        >
-                            <div class="flex items-start gap-3">
-                                <BrandIcon
-                                    icon={service.icon}
-                                    label={`${service.name ?? service.id} logo`}
-                                    class="size-8 shrink-0 text-accent"
-                                />
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                                        <h2 class="text-sm font-medium text-foreground" data-service-name>
-                                            {service.name ?? service.id}
-                                        </h2>
-                                        <span
-                                            class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
-                                            data-service-status
-                                            hidden
-                                        >
-                                            <span
-                                                class="size-1.5 rounded-full bg-muted-foreground/50"
-                                                data-service-status-dot
-                                                aria-hidden="true"
-                                            ></span>
-                                            <span data-service-status-label></span>
-                                        </span>
-                                    </div>
-
-                                    <p
-                                        class="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2"
-                                        data-service-description
+            <ul class="grid gap-3 sm:grid-cols-2" data-service-list>
+                {services.map((service) => (
+                    <li
+                        class="rounded-lg border border-border/70 bg-card p-4"
+                        data-service-card
+                        data-service-id={service.id}
+                        data-service-url={service.url}
+                    >
+                        <div class="flex items-start gap-3">
+                            <BrandIcon
+                                icon={service.icon}
+                                label={`${service.name ?? service.id} logo`}
+                                class="size-8 shrink-0 text-accent"
+                            />
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                                    <h2 class="text-sm font-medium text-foreground" data-service-name>
+                                        {service.name ?? service.id}
+                                    </h2>
+                                    <span
+                                        class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+                                        data-service-status
                                         hidden
-                                    ></p>
+                                    >
+                                        <span
+                                            class="size-1.5 rounded-full bg-muted-foreground/50"
+                                            data-service-status-dot
+                                            aria-hidden="true"
+                                        ></span>
+                                        <span data-service-status-label></span>
+                                    </span>
+                                </div>
 
-                                    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+                                <p
+                                    class="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2"
+                                    data-service-description
+                                    hidden
+                                ></p>
+
+                                <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+                                    <a
+                                        data-service-link
+                                        hidden
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="inline-flex items-center gap-1 font-medium text-foreground underline underline-offset-2 decoration-accent/50 hover:text-accent"
+                                    >
+                                        Visit service
+                                        <ExternalLink size={12} aria-hidden="true" />
+                                    </a>
+
+                                    {service.instructions && (
+                                        <span class="text-muted-foreground">{service.instructions}</span>
+                                    )}
+
+                                    {service.requestAccess && (
                                         <a
-                                            data-service-link
-                                            hidden
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                                            href={requestHref}
                                             class="inline-flex items-center gap-1 font-medium text-foreground underline underline-offset-2 decoration-accent/50 hover:text-accent"
                                         >
-                                            Visit service
-                                            <ExternalLink size={12} aria-hidden="true" />
+                                            <Mail size={12} aria-hidden="true" />
+                                            Request access
                                         </a>
-
-                                        {service.instructions && (
-                                            <span class="text-muted-foreground">{service.instructions}</span>
-                                        )}
-
-                                        {service.requestAccess && (
-                                            <a
-                                                href={requestHref}
-                                                class="inline-flex items-center gap-1 font-medium text-foreground underline underline-offset-2 decoration-accent/50 hover:text-accent"
-                                            >
-                                                <Mail size={12} aria-hidden="true" />
-                                                Request access
-                                            </a>
-                                        )}
-                                    </div>
+                                    )}
                                 </div>
                             </div>
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <div class="rounded-lg border border-dashed border-border p-8 text-center" role="status">
-                    <Server size={28} class="mx-auto text-muted-foreground" aria-hidden="true" />
-                    <h2 class="mt-3 font-medium">Service listings are being prepared</h2>
-                    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-                        Check back soon, or contact me if you are interested in using a hosted service.
-                    </p>
-                    <a
-                        href={requestHref}
-                        class="mt-4 inline-flex text-sm font-medium text-foreground underline underline-offset-2 decoration-accent/50 hover:text-accent"
-                    >
-                        Get in touch
-                    </a>
-                </div>
-            )}
+                        </div>
+                    </li>
+                ))}
+            </ul>
+
+            <div
+                class="rounded-lg border border-dashed border-border p-8 text-center"
+                role="status"
+                data-service-empty
+                hidden={services.length > 0}
+            >
+                <Server size={28} class="mx-auto text-muted-foreground" aria-hidden="true" />
+                <h2 class="mt-3 font-medium">Service listings are being prepared</h2>
+                <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    Check back soon, or contact me if you are interested in using a hosted service.
+                </p>
+                <a
+                    href={requestHref}
+                    class="mt-4 inline-flex text-sm font-medium text-foreground underline underline-offset-2 decoration-accent/50 hover:text-accent"
+                >
+                    Get in touch
+                </a>
+            </div>
+
+            <template data-service-template>
+                <li class="rounded-lg border border-border/70 bg-card p-4" data-service-card>
+                    <div class="flex items-start gap-3">
+                        <Code
+                            size={32}
+                            class="size-8 shrink-0 text-accent"
+                            data-service-icon
+                            role="img"
+                            aria-label=""
+                        />
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                                <h2 class="text-sm font-medium text-foreground" data-service-name></h2>
+                                <span
+                                    class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+                                    data-service-status
+                                    hidden
+                                >
+                                    <span
+                                        class="size-1.5 rounded-full bg-muted-foreground/50"
+                                        data-service-status-dot
+                                        aria-hidden="true"
+                                    ></span>
+                                    <span data-service-status-label></span>
+                                </span>
+                            </div>
+
+                            <p
+                                class="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2"
+                                data-service-description
+                                hidden
+                            ></p>
+
+                            <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+                                <a
+                                    data-service-link
+                                    hidden
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex items-center gap-1 font-medium text-foreground underline underline-offset-2 decoration-accent/50 hover:text-accent"
+                                >
+                                    Visit service
+                                    <ExternalLink size={12} aria-hidden="true" />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </template>
         </div>
     </section>
 </Base>
@@ -121,18 +174,54 @@ const requestHref = email?.href ?? "#";
         unknown: "bg-muted-foreground/50",
     };
 
-    const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-service-card]"));
-    const ids = cards
-        .map((card) => card.getAttribute("data-service-id") ?? "")
-        .filter(Boolean);
+    const list = document.querySelector<HTMLElement>("[data-service-list]");
+    const empty = document.querySelector<HTMLElement>("[data-service-empty]");
+    const template = document.querySelector<HTMLTemplateElement>("[data-service-template]");
 
-    if (ids.length > 0) {
-        fetchKenerServices("/api/services", ids).then((results) => {
-            for (const card of cards) {
-                const id = card.getAttribute("data-service-id");
-                if (!id) continue;
-                const service = results[id];
-                if (!service) continue;
+    if (list && template) {
+        const jsonOrder = Array.from(list.querySelectorAll<HTMLElement>("[data-service-card]"))
+            .map((card) => card.dataset.serviceId ?? "")
+            .filter(Boolean);
+
+        fetchKenerServices("/api/services").then(({ services, pageResolved }) => {
+            if (!pageResolved) return;
+
+            const byId = new Map<string, HTMLElement>();
+            for (const card of Array.from(list.querySelectorAll<HTMLElement>("[data-service-card]"))) {
+                const id = card.dataset.serviceId ?? "";
+                if (services[id]) {
+                    byId.set(id, card);
+                } else {
+                    card.remove();
+                }
+            }
+
+            const ordered = jsonOrder.filter((id) => services[id]);
+            const extras = Object.entries(services)
+                .filter(([id]) => !jsonOrder.includes(id))
+                .sort((a, b) => a[1].position - b[1].position);
+
+            for (const [id, service] of extras) {
+                const fragment = template.content.cloneNode(true) as DocumentFragment;
+                const card = fragment.querySelector<HTMLElement>("[data-service-card]");
+                if (!card) continue;
+
+                card.dataset.serviceId = id;
+                const icon = card.querySelector("[data-service-icon]");
+                if (icon) icon.setAttribute("aria-label", `${service.name ?? id} logo`);
+
+                list.append(fragment);
+                byId.set(id, card);
+            }
+
+            for (const id of [...ordered, ...extras.map(([id]) => id)]) {
+                const card = byId.get(id);
+                if (card) list.append(card);
+            }
+
+            for (const [id, service] of Object.entries(services)) {
+                const card = byId.get(id);
+                if (!card) continue;
 
                 const name = card.querySelector("[data-service-name]");
                 if (name && service.name) name.textContent = service.name;
@@ -165,6 +254,10 @@ const requestHref = email?.href ?? "#";
                         link.removeAttribute("hidden");
                     }
                 }
+            }
+
+            if (empty) {
+                empty.hidden = list.querySelectorAll("[data-service-card]").length > 0;
             }
         });
     }

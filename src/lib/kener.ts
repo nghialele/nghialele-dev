@@ -5,6 +5,12 @@ export interface KenerService {
     description?: string;
     url?: string;
     status: KenerStatus;
+    position: number;
+}
+
+export interface KenerServicesResult {
+    services: Record<string, KenerService>;
+    pageResolved: boolean;
 }
 
 export const kenerStatusLabels: Record<KenerStatus, string> = {
@@ -21,11 +27,16 @@ const statuses: Record<string, KenerStatus> = {
     unknown: "unknown",
 };
 
+const EMPTY: KenerServicesResult = { services: {}, pageResolved: false };
+
 function toService(value: unknown): KenerService | undefined {
     if (typeof value !== "object" || value === null) return undefined;
 
     const status = "status" in value && typeof value.status === "string" ? value.status : "";
-    const service: KenerService = { status: statuses[status] ?? "unknown" };
+    const service: KenerService = {
+        status: statuses[status] ?? "unknown",
+        position: "position" in value && typeof value.position === "number" ? value.position : 0,
+    };
 
     if ("name" in value && typeof value.name === "string" && value.name) service.name = value.name;
     if ("description" in value && typeof value.description === "string" && value.description) {
@@ -38,21 +49,16 @@ function toService(value: unknown): KenerService | undefined {
 
 export async function fetchKenerServices(
     endpoint: string,
-    ids: string[],
     fetcher: typeof fetch = fetch,
-): Promise<Record<string, KenerService>> {
-    if (!endpoint || ids.length === 0) return {};
+): Promise<KenerServicesResult> {
+    if (!endpoint) return EMPTY;
 
     try {
-        const separator = endpoint.includes("?") ? "&" : "?";
-        const response = await fetcher(
-            `${endpoint}${separator}ids=${encodeURIComponent(ids.join(","))}`,
-            {
-                headers: { accept: "application/json" },
-                signal: AbortSignal.timeout(5000),
-            },
-        );
-        if (!response.ok) return {};
+        const response = await fetcher(endpoint, {
+            headers: { accept: "application/json" },
+            signal: AbortSignal.timeout(5000),
+        });
+        if (!response.ok) return EMPTY;
 
         const payload: unknown = await response.json();
         if (
@@ -62,16 +68,17 @@ export async function fetchKenerServices(
             typeof payload.services !== "object" ||
             payload.services === null
         ) {
-            return {};
+            return EMPTY;
         }
 
-        const result: Record<string, KenerService> = {};
+        const services: Record<string, KenerService> = {};
         for (const [tag, value] of Object.entries(payload.services)) {
             const service = toService(value);
-            if (service) result[tag] = service;
+            if (service) services[tag] = service;
         }
-        return result;
+
+        return { services, pageResolved: "pageResolved" in payload && payload.pageResolved === true };
     } catch {
-        return {};
+        return EMPTY;
     }
 }
