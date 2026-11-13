@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import Signal from "../components/Signal.astro";
 import siteInfo from "../../public/0user.json";
 ---
 
@@ -36,6 +37,11 @@ import siteInfo from "../../public/0user.json";
                     </div>
                 ))}
             </div>
+        </div>
+    </section>
+    <section class="container mx-auto px-6 pb-16">
+        <div class="max-w-3xl mx-auto">
+            <Signal variant="panel" />
         </div>
     </section>
 </Base>

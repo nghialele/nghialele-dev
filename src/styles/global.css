@@ -158,6 +158,30 @@
   }
 }
 
+.signal-dot {
+  position: relative;
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+[data-signal][data-state="online"] .signal-dot { background-color: var(--success); }
+[data-signal][data-state="idle"] .signal-dot { background-color: var(--warning); }
+[data-signal][data-state="dnd"] .signal-dot { background-color: var(--destructive); }
+.signal-dot[data-pulse="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background-color: inherit;
+  animation: status-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .signal-dot[data-pulse="true"]::after { animation: none; }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
