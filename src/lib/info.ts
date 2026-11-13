@@ -37,11 +37,6 @@ export interface SkillCategory {
     items: string[];
 }
 
-export interface PresenceConfig {
-    userId: string;
-    endpoint?: string;
-}
-
 export interface UseItem {
     name: string;
     icon?: string;
@@ -91,7 +86,6 @@ export interface SiteInfo {
     role: string;
     site: SiteMeta;
     contacts: ContactLink[];
-    presence?: PresenceConfig;
     resume: ResumeData;
 }
 

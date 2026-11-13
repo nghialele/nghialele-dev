@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import "katex/dist/katex.min.css";
 import Navigation from '../components/Navigation.astro';
+import Signal from '../components/Signal.astro';
 import { info } from '../lib/info.ts';
 
 interface BaseProps { title?: string; description?: string; ogImage?: string }
@@ -11,6 +12,7 @@ const canonical = info.site.url;
 const siteUrl = info.site.url;
 const siteLocale = info.site.locale ?? 'en_US';
 const resolvedOgImage = ogImage ?? (info.site.ogImage || undefined);
+const showBeacon = Astro.url.pathname !== "/";
 ---
 <html lang="en">
 <head>
@@ -74,5 +76,6 @@ const resolvedOgImage = ogImage ?? (info.site.ogImage || undefined);
 <main class="flex-grow flex flex-col">
 <slot/>
 </main>
+{showBeacon && <Signal variant="beacon" />}
 </body>
 </html>
