@@ -6,20 +6,18 @@ interface Props {
 }
 
 const variant = Astro.props.variant ?? "panel";
-const endpoint = import.meta.env.PUBLIC_LANYARD_ENDPOINT || "https://api.lanyard.rest/v1/users";
-const userId = import.meta.env.PUBLIC_LANYARD_USER_ID ?? "";
-const configured = Boolean(userId);
+const endpoint = import.meta.env.PUBLIC_LANYARD_ENDPOINT || "/api/presence";
 ---
 
-{configured && variant === "panel" && (
+{variant === "panel" && (
     <aside
         class="rounded-lg border border-border/70 bg-card p-5"
         data-signal
         data-variant="panel"
         data-endpoint={endpoint}
-        data-user-id={userId}
         data-state="unavailable"
         aria-label="Discord presence"
+        hidden
     >
         <p class="mb-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">on the wire</p>
         <div class="flex items-start gap-4">
@@ -86,13 +84,12 @@ const configured = Boolean(userId);
     </aside>
 )}
 
-{configured && variant === "beacon" && (
+{variant === "beacon" && (
     <div
         class="fixed bottom-4 right-4 z-40 flex max-w-[min(22rem,calc(100vw_-_2rem))] items-center gap-2 rounded-full border border-border/70 bg-card/90 px-3 py-1.5 shadow-lg backdrop-blur"
         data-signal
         data-variant="beacon"
         data-endpoint={endpoint}
-        data-user-id={userId}
         data-state="unavailable"
         aria-label="Discord presence"
         hidden
@@ -112,8 +109,7 @@ const configured = Boolean(userId);
     </div>
 )}
 
-{configured && (
-    <script>
+<script>
         import { fetchPresence, type PresenceResult } from "../lib/presence";
 
         const LABELS = {
@@ -130,7 +126,6 @@ const configured = Boolean(userId);
         if (root) {
             const variant = root.dataset.variant ?? "panel";
             const endpoint = root.dataset.endpoint ?? "";
-            const userId = root.dataset.userId ?? "";
             const isBeacon = variant === "beacon";
 
             const q = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector);
@@ -185,6 +180,10 @@ const configured = Boolean(userId);
             };
 
             const render = (result: PresenceResult) => {
+                if (!result.configured) {
+                    root.hidden = true;
+                    return;
+                }
                 current = result;
                 root.dataset.state = result.state;
                 const dot = q<HTMLElement>("[data-signal-dot]");
@@ -204,6 +203,7 @@ const configured = Boolean(userId);
                     return;
                 }
 
+                root.hidden = false;
                 setText("[data-signal-name]", name || "discord");
                 setText("[data-signal-state]", LABELS[result.state]);
 
@@ -252,7 +252,7 @@ const configured = Boolean(userId);
 
             const refresh = async () => {
                 if (stopped) return;
-                const result = await fetchPresence(endpoint, userId);
+                const result = await fetchPresence(endpoint);
                 if (!stopped) render(result);
             };
 
@@ -277,4 +277,3 @@ const configured = Boolean(userId);
             }
         }
     </script>
-)}
