@@ -1,3 +1,8 @@
+/** Both a user ID and a key are required; either one missing means no presence at all. */
+export function presenceConfigured(): boolean {
+    return Boolean(import.meta.env.PUBLIC_LANYARD_USER_ID && import.meta.env.PUBLIC_LANYARD_KEY);
+}
+
 export type PresenceState = "online" | "idle" | "dnd" | "offline" | "unavailable";
 
 export interface PresenceActivity {
@@ -24,8 +29,6 @@ export interface PresenceResult {
     activity?: PresenceActivity;
     spotify?: SpotifyPresence;
     devices: { desktop: boolean; mobile: boolean; web: boolean };
-    /** False when the proxy has no credentials, so the component can stay hidden. */
-    configured: boolean;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -40,8 +43,8 @@ function asTimestamp(value: unknown): number | undefined {
     return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
-function unavailable(configured = true): PresenceResult {
-    return { state: "unavailable", devices: { desktop: false, mobile: false, web: false }, configured };
+function unavailable(): PresenceResult {
+    return { state: "unavailable", devices: { desktop: false, mobile: false, web: false } };
 }
 
 function avatarUrl(user: Record<string, unknown>): string | undefined {
@@ -71,10 +74,7 @@ function activityImage(activity: Record<string, unknown>): string | undefined {
 }
 
 function normalizePresence(payload: unknown): PresenceResult {
-    if (!isRecord(payload) || payload.success !== true || !isRecord(payload.data)) {
-        const code = isRecord(payload) && isRecord(payload.error) ? asString(payload.error.code) : undefined;
-        return unavailable(code !== "unconfigured");
-    }
+    if (!isRecord(payload) || payload.success !== true || !isRecord(payload.data)) return unavailable();
 
     const data = payload.data;
     const rawStatus = asString(data.discord_status);
@@ -132,13 +132,19 @@ function normalizePresence(payload: unknown): PresenceResult {
             mobile: data.active_on_discord_mobile === true,
             web: data.active_on_discord_web === true,
         },
-        configured: true,
     };
 }
 
-export async function fetchPresence(url: string, fetcher: typeof fetch = fetch): Promise<PresenceResult> {
-    if (!url) return unavailable();
+export async function fetchPresence(
+    endpoint: string,
+    userId: string,
+    key: string,
+    fetcher: typeof fetch = fetch,
+): Promise<PresenceResult> {
+    if (!endpoint || !userId || !key) return unavailable();
     try {
+        const url = new URL(`${endpoint.replace(/\/$/, "")}/${encodeURIComponent(userId)}`);
+        url.searchParams.set("key", key);
         const response = await fetcher(url, { headers: { accept: "application/json" }, cache: "no-store" });
         if (!response.ok) return unavailable();
         return normalizePresence(await response.json());

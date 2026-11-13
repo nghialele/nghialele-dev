@@ -1,12 +1,22 @@
 ---
 import Base from "../layouts/Base.astro";
 import Signal from "../components/Signal.astro";
+import { presenceConfigured } from "../lib/presence";
 import siteInfo from "../../public/0user.json";
+
+const showThought = presenceConfigured();
 ---
 
 <Base title={siteInfo.site.title} description={siteInfo.site.description}>
     <section class="container mx-auto px-6 py-16 grow flex flex-col justify-center">
         <div class="max-w-3xl mx-auto w-full">
+            {showThought && (
+                <div class="thought-anchor">
+                    <div class="thought-bubble" data-thought hidden>
+                        <span data-thought-text></span>
+                    </div>
+                </div>
+            )}
             <h1 class="mb-2 text-4xl md:text-5xl font-bold tracking-tight text-balance">
                 {siteInfo.name}
             </h1>

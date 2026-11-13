@@ -1,23 +1,28 @@
 ---
 import { Globe, Monitor, Smartphone, X } from "@lucide/astro";
+import { presenceConfigured } from "../lib/presence";
 
 interface Props {
     variant?: "panel" | "beacon";
 }
 
 const variant = Astro.props.variant ?? "panel";
-const endpoint = import.meta.env.PUBLIC_LANYARD_ENDPOINT || "/api/presence";
+const endpoint = import.meta.env.PUBLIC_LANYARD_ENDPOINT || "https://lanyard.idler.me/v1/users";
+const userId = import.meta.env.PUBLIC_LANYARD_USER_ID ?? "";
+const key = import.meta.env.PUBLIC_LANYARD_KEY ?? "";
+const configured = presenceConfigured();
 ---
 
-{variant === "panel" && (
+{configured && variant === "panel" && (
     <aside
         class="rounded-lg border border-border/70 bg-card p-5"
         data-signal
         data-variant="panel"
         data-endpoint={endpoint}
+        data-user-id={userId}
+        data-key={key}
         data-state="unavailable"
         aria-label="Discord presence"
-        hidden
     >
         <p class="mb-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">on the wire</p>
         <div class="flex items-start gap-4">
@@ -84,12 +89,14 @@ const endpoint = import.meta.env.PUBLIC_LANYARD_ENDPOINT || "/api/presence";
     </aside>
 )}
 
-{variant === "beacon" && (
+{configured && variant === "beacon" && (
     <div
         class="fixed bottom-4 right-4 z-40 flex max-w-[min(22rem,calc(100vw_-_2rem))] items-center gap-2 rounded-full border border-border/70 bg-card/90 px-3 py-1.5 shadow-lg backdrop-blur"
         data-signal
         data-variant="beacon"
         data-endpoint={endpoint}
+        data-user-id={userId}
+        data-key={key}
         data-state="unavailable"
         aria-label="Discord presence"
         hidden
@@ -109,7 +116,8 @@ const endpoint = import.meta.env.PUBLIC_LANYARD_ENDPOINT || "/api/presence";
     </div>
 )}
 
-<script>
+{configured && (
+    <script>
         import { fetchPresence, type PresenceResult } from "../lib/presence";
 
         const LABELS = {
@@ -126,9 +134,13 @@ const endpoint = import.meta.env.PUBLIC_LANYARD_ENDPOINT || "/api/presence";
         if (root) {
             const variant = root.dataset.variant ?? "panel";
             const endpoint = root.dataset.endpoint ?? "";
+            const userId = root.dataset.userId ?? "";
+            const key = root.dataset.key ?? "";
             const isBeacon = variant === "beacon";
 
             const q = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector);
+            const thought = document.querySelector<HTMLElement>("[data-thought]");
+            const thoughtText = document.querySelector<HTMLElement>("[data-thought-text]");
             const setText = (selector: string, value: string) => {
                 const node = q(selector);
                 if (node) node.textContent = value;
@@ -180,16 +192,18 @@ const endpoint = import.meta.env.PUBLIC_LANYARD_ENDPOINT || "/api/presence";
             };
 
             const render = (result: PresenceResult) => {
-                if (!result.configured) {
-                    root.hidden = true;
-                    return;
-                }
                 current = result;
                 root.dataset.state = result.state;
                 const dot = q<HTMLElement>("[data-signal-dot]");
                 if (dot) dot.dataset.pulse = result.state === "online" ? "true" : "false";
 
                 const name = result.displayName ?? "";
+
+                const status = result.customStatus?.trim();
+                if (thought && thoughtText) {
+                    thought.hidden = !status;
+                    if (status) thoughtText.textContent = status;
+                }
 
                 if (isBeacon) {
                     root.hidden = false;
@@ -252,7 +266,7 @@ const endpoint = import.meta.env.PUBLIC_LANYARD_ENDPOINT || "/api/presence";
 
             const refresh = async () => {
                 if (stopped) return;
-                const result = await fetchPresence(endpoint);
+                const result = await fetchPresence(endpoint, userId, key);
                 if (!stopped) render(result);
             };
 
@@ -277,3 +291,4 @@ const endpoint = import.meta.env.PUBLIC_LANYARD_ENDPOINT || "/api/presence";
             }
         }
     </script>
+)}
